@@ -1,25 +1,27 @@
 ### Dynamic Linking
 
-1. Creating [Mach-O](https://en.wikipedia.org/wiki/Mach-O) file (`.o`)
+Note: The instructions found in this README are heavily inspired by [this blog post](https://pewpewthespells.com/blog/static_and_dynamic_libraries.html) about Static vs. Dynamic Linking by [queersorceress](https://twitter.com/queersorceress).
+
+
+#### 1. Creating [Mach-O](https://en.wikipedia.org/wiki/Mach-O) file (`.o`)
 
     clang -c calculator.c -o calculator.o
 
+#### 2. Creating library
 
-2. Creating library
+The following command creates the dynamic library (_dylib_) and links against `libSystem`. The dynamic library is a Mach-O binary file and will be loaded dynamically at launch time by `dyld` as a dependency of another binary. 
 
     libtool -dynamic calculator.o -o libcalc_dynamic.dylib -lSystem
-
-This command creates the dynamic library (_dylib_) and links against `libSystem`. The dynamic library is a Mach-O binary file and will be loaded dynamically at launch time by `dyld` as a dependency of another binary. If other (static?) frameworks should be linked, the `-framework` flag can be used, for example:
+    
+If other (static?) frameworks should be linked, the `-framework` flag can be used, for example:
 
     libtool -dynamic calculator.o -o libcalc_dynamic.dylib -framework CoreFoundation -lSystem
 
-
-3. Generate object file for `main`
+#### 3. Generate object file for `main`
 
     clang -c main.c -o main.o
 
-
-4. Linking
+#### 4. Linking
 
     ld main.o -lSystem -L. -lcalc_dynamic -arch x86_64 -o test_dynamic -v
 
@@ -29,12 +31,12 @@ This command geneates a binary executable from the main object file, also passin
 - `-arch x86_64` to specify for which architecture the program should be executable
 
 
-5. Running
+#### 5. Running
 
     ./test_dynamic
 
 
-7. Checking symbols
+#### 7. Checking symbols
 
 The `nm` tool can be used to display the name list (symbol table) of each object file in the argument list. Each symbol is preceded by its value (blanks if undefined). Unless the option `-m` is specified, this value is followed by one of the following characters, representing the symbol type: U (undefined), A (absolute), T (text section symbol), D (data section symbol), B (bss section symbol), C (common symbol), S (symbol in section other than those mentioned above), I (indirect symbol).
 
@@ -49,7 +51,7 @@ The `nm` tool can be used to display the name list (symbol table) of each object
 The symbols `_add` and `_multiply` do not have addresses, because they don't exist inside of the main binary, they only exist in the dynamic library that was created. 
 
 
-8. Checking references
+#### 8. Checking references
 
 The `otool` tool can be used to display specified parts of object files or libraries. The `L` option prints all shared libraries that are used.
 
